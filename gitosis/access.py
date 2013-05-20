@@ -2,6 +2,13 @@ import os, logging
 from ConfigParser import NoSectionError, NoOptionError
 from fnmatch import fnmatch
 
+from trac.env import open_environment
+from trac.perm import PermissionCache
+
+from multiproject.core.configuration import conf
+from multiproject.core.proto import ProtocolManager
+from multiproject.common.projects import Project
+
 from gitosis import group
 
 def pathMatchPatterns(path, repos):
@@ -101,3 +108,45 @@ def haveAccess(config, user, mode, path):
                 path=mapping,
                 ))
             return (prefix, mapping)
+
+    # PATCH: Authenticate against MultiProject backend(s)
+
+    if path.startswith('git/'):
+        path = path[4:]
+    project_name = path
+
+    env = open_environment(conf.getEnvironmentSysPath(project_name), use_cache=True)
+
+    # Ensure project is using git repo
+    if env.config.get('trac', 'repository_type', default='') != 'git':
+        return None
+
+    # Map the mode to the action.
+    action = None
+    if mode == 'readonly':
+        action = 'VERSION_CONTROL_VIEW'
+    elif mode in ('writable', 'writeable'):
+        action = 'VERSION_CONTROL'
+    else:
+        return None
+
+    # Check if protocol is allowed or not
+    project = Project.get(env)
+    protocols = ProtocolManager(project.id)
+    if not protocols.is_protocol_allowed('ssh', 'git'):
+        return None
+
+    # Check permissions
+    if action in PermissionCache(env, username=user):
+        env.log.info('Granted Gitosis access for %s as %s on %s' % (user, mode, path))
+
+        # Get the prefix and mapping
+        vcs_path = conf.getEnvironmentVcsPath(project_name)
+        if vcs_path:
+            mapping = path
+            prefix = os.path.dirname(vcs_path)
+            log.debug('Using prefix %(prefix)r for %(path)r' %
+                      dict(prefix=prefix, path=mapping,))
+            return prefix, mapping
+    else:
+        env.log.warning('Unauthorized access for %s as %s on %s' % (user, mode, path))

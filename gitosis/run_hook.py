@@ -36,14 +36,17 @@ def post_update(cfg, git_dir):
     gitweb.set_descriptions(
         config=cfg,
         )
-    generated = util.getGeneratedFilesDir(config=cfg)
-    gitweb.generate_project_list(
-        config=cfg,
-        path=os.path.join(generated, 'projects.list'),
-        )
-    gitdaemon.set_export_ok(
-        config=cfg,
-        )
+    # Multiproject does not need generated projects list, or git-daemon
+    # to access the repositories. Accesses are checked in a custom way
+    # where the handling of the repository is left for gitosis.
+    # generated = util.getGeneratedFilesDir(config=cfg)
+    # gitweb.generate_project_list(
+    #     config=cfg,
+    #     path=os.path.join(generated, 'projects.list'),
+    #     )
+    # gitdaemon.set_export_ok(
+    #     config=cfg,
+    #     )
     authorized_keys = util.getSSHAuthorizedKeysPath(config=cfg)
     ssh.writeAuthorizedKeys(
         path=authorized_keys,

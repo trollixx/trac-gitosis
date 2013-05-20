@@ -129,7 +129,9 @@ def serve(
     (topdir, relpath) = newpath
     assert not relpath.endswith('.git'), \
            'git extension should have been stripped: %r' % relpath
-    repopath = '%s.git' % relpath
+    #repopath '%s.git' % relpath    # CQDE does not use .git extension for
+    repopath = relpath              # its project repositories.
+
     fullpath = os.path.join(topdir, repopath)
     if (not os.path.exists(fullpath)
         and verb in COMMANDS_WRITE):

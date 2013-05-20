@@ -131,7 +131,7 @@ class Main(app.App):
         log.info('Creating repository structure...')
         repositories = util.getRepositoryDir(cfg)
         util.mkdir(repositories)
-        admin_repository = os.path.join(repositories, 'gitosis-admin.git')
+        admin_repository = os.path.join(repositories, 'gitosis-admin') # CQDE change: removed .git extension.
         init_admin_repository(
             git_dir=admin_repository,
             pubkey=pubkey,
