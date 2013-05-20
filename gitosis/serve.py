@@ -133,30 +133,8 @@ def serve(
     repopath = relpath              # its project repositories.
 
     fullpath = os.path.join(topdir, repopath)
-    if (not os.path.exists(fullpath)
-        and verb in COMMANDS_WRITE):
-        # it doesn't exist on the filesystem, but the configuration
-        # refers to it, we're serving a write request, and the user is
-        # authorized to do that: create the repository on the fly
-
-        # create leading directories
-        p = topdir
-        for segment in repopath.split(os.sep)[:-1]:
-            p = os.path.join(p, segment)
-            util.mkdir(p, 0750)
-
-        repository.init(path=fullpath)
-        gitweb.set_descriptions(
-            config=cfg,
-            )
-        generated = util.getGeneratedFilesDir(config=cfg)
-        gitweb.generate_project_list(
-            config=cfg,
-            path=os.path.join(generated, 'projects.list'),
-            )
-        gitdaemon.set_export_ok(
-            config=cfg,
-            )
+    if (not os.path.exists(fullpath) and verb in COMMANDS_WRITE):
+        raise WriteAccessDenied()
 
     # put the verb back together with the new path
     newcmd = "%(verb)s '%(path)s'" % dict(
