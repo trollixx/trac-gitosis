@@ -4,11 +4,13 @@ from ConfigParser import NoSectionError, NoOptionError
 from trac.env import open_environment
 from trac.perm import PermissionCache
 
-from multiproject.core.configuration import conf
+from multiproject.core.configuration import Configuration
 from multiproject.core.proto import ProtocolManager
 from multiproject.common.projects import Project
 
 from gitosis import group
+
+conf = Configuration.instance()
 
 def haveAccess(config, user, mode, path):
     """
